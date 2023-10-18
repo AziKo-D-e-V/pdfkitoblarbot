@@ -97,8 +97,8 @@ SendOrder.hears(SEND_ORDER, async (ctx) => {
     } else {
       await ctx.reply("Buyurtma yetkazishda xatolik: " + error.message);
     }
+    console.log(error);
   }
-  console.log(error);
 });
 
 const SendOrderByID = router.route("sendOrderById");
@@ -173,8 +173,8 @@ Catch.on("message", async (ctx) => {
     } else {
       await ctx.reply("Buyurtma yetkazishda xatolik: " + error.message);
     }
+    console.log(error);
   }
-  console.log(error);
 });
 
 SendOrder.hears(VIEW_ORDER, async (ctx) => {
@@ -246,8 +246,8 @@ SettingAdmin.hears(ADMIN_ADD, async (ctx) => {
     } else {
       await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
     }
+    console.log(error);
   }
-  console.log(error);
 });
 
 const AdminAdd = router.route("admin-add");
