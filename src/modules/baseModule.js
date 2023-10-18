@@ -4,7 +4,14 @@ const { Keyboard } = require("grammy");
 const userModel = require("../models/user.model");
 const bot = require("../helper/commands");
 
-const { SEARCH, INFO, SEND_ADMIN, ORDERS } = require("../enums/keyboard.vars");
+const {
+  SEARCH,
+  INFO,
+  SEND_ADMIN,
+  ORDERS,
+  ADMINS,
+  USERS,
+} = require("../enums/keyboard.vars");
 const orderModel = require("../models/order.model");
 
 const from_chat_id = "@adsgasdh";
@@ -25,11 +32,9 @@ start.on(":text", async (ctx) => {
       });
     } else {
       const buttonRows = [
-        [
-          Keyboard.text(SEARCH),
-          Keyboard.text(SEND_ADMIN),
-          Keyboard.text(ORDERS),
-        ],
+        [Keyboard.text(ORDERS), Keyboard.text(ADMINS)],
+        [Keyboard.text(USERS)],
+        [Keyboard.text(SEARCH), Keyboard.text(SEND_ADMIN)],
         [Keyboard.text(INFO)],
       ];
       const keyboardAdmin = Keyboard.from(buttonRows).resized().oneTime(true);
@@ -80,11 +85,9 @@ bot.command("start", async (ctx) => {
       ctx.session.step = "start";
     } else if (findUser.is_admin === true) {
       const buttonRows = [
-        [
-          Keyboard.text(SEARCH),
-          Keyboard.text(SEND_ADMIN),
-          Keyboard.text(ORDERS),
-        ],
+        [Keyboard.text(ORDERS), Keyboard.text(ADMINS)],
+        [Keyboard.text(USERS)],
+        [Keyboard.text(SEARCH), Keyboard.text(SEND_ADMIN)],
         [Keyboard.text(INFO)],
       ];
       const keyboardAdmin = Keyboard.from(buttonRows).resized().oneTime(true);
@@ -149,11 +152,17 @@ order1.on(":text", async (ctx) => {
     orderId = lastOrder.order_id + 1;
   }
 
-  await orderModel.create({
+  let order = await orderModel.create({
     order_id: orderId,
     order_name: orderText,
     user_id,
   });
+  ctx.api.sendMessage(
+    from_chat_id,
+    `🆔Order_id: ${order.order_id}\n\nℹ️Buyurtma: ${
+      order.order_name
+    }\n🕧Ro'yxatga olingan vaqt: ${order.createdAt.toLocaleString()}`
+  );
 
   ctx.session.step = "start";
 });
@@ -162,12 +171,12 @@ bot.hears(INFO, async (ctx) => {
   try {
     const copymsg1 = 24;
     const copymsg2 = 24;
-    const chatId = ctx.chat.id;
+    const chatId = ctx.from.id;
     const from_chat_id = -1001975830564;
     ctx.api.copyMessage(chatId, from_chat_id, copymsg1);
-    ctx.session.step = "text";
+    ctx.session.step = "start";
   } catch (error) {
-    ctx.session.step = "text";
+    ctx.session.step = "start";
     ctx.api.sendMessage(5634162263, "Error command 'info'\n\n" + error.message);
     console.log(error.message);
   }
