@@ -187,7 +187,10 @@ Catch.on("message", async (ctx) => {
     if (error.error_code == 403) {
       await ctx.reply("Bot foydalanuvchi tomonidan bloklangan...");
     } else {
-      await ctx.reply("Buyurtma yetkazishda xatolik: " + error.message);
+      ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+        parse_mode: "HTML",
+        message_thread_id: config.BOT_ERROR_THREAD_ID,
+      });
     }
     ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
       parse_mode: "HTML",
@@ -532,22 +535,47 @@ catchAd.on("message", async (ctx) => {
   try {
     const message = ctx.message.text;
     const chat_id = 5634162263;
-    const users = await userModel.find();
+    const usersGetAll = await userModel.find({ is_admin: false });
+
+    const users = [];
+    usersGetAll.forEach((user) => {
+      users.push(user.user_id);
+    });
+    const blocked = [];
+
     for (let i = 0; i < users.length; i++) {
-      try {
-        const user_id = users[i].user_id;
-        await ctx.api.sendMessage(user_id, message);
-      } catch (error) {
-        ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
-          parse_mode: "HTML",
-          message_thread_id: config.BOT_ERROR_THREAD_ID,
-        });
-        i++;
-      }
+      setTimeout(async () => {
+        try {
+          await ctx.api.sendMessage(users[i], message);
+        } catch (error) {
+          if (error.error_code == 403) {
+            await ctx.reply(
+              "Bot foydalanuvchi tomonidan bloklangan..." +
+                "\nuser_id: " +
+                users[i].user_id
+            );
+          } else {
+            await ctx.api.sendMessage(
+              config.GROUP_ID,
+              `<code>${error.message}</code>`,
+              {
+                parse_mode: "HTML",
+                message_thread_id: config.BOT_ERROR_THREAD_ID,
+              }
+            );
+          }
+        }
+        // Reklama jo'natilganidan so'ng ishlatish
+        if (i === users.length - 1) {
+          setTimeout(async () => {
+            await ctx.reply("Reklama hamma users ga jo'natildi✅✅✅");
+          }, 100); // 100 ms kutiladi
+        }
+      }, 200);
     }
-    await ctx.reply("Reklama hamma users ga jo'natildi✅✅✅");
+
+    ctx.session.step = "adminMenu";
   } catch (error) {
-    // ctx.reply("Reklama yuborishda xatolik ro'y berdi😔\n\n" + error.message);
     ctx.session.step = "send_ad";
     ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
       parse_mode: "HTML",
