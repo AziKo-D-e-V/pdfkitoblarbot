@@ -22,6 +22,7 @@ const {
   SEND_ADD,
 } = require("../enums/keyboard.vars");
 const orderModel = require("../models/order.model");
+const config = require("../config");
 
 const buttonRows = [
   [Keyboard.text(ORDERS), Keyboard.text(ADMINS)],
@@ -39,7 +40,10 @@ AdminMenu.on("message:text", async (ctx) => {
     });
   } catch (error) {
     console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -58,7 +62,10 @@ Orders.hears(ORDERS, async (ctx) => {
     ctx.session.step = "sendOrder";
   } catch (error) {
     console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -97,7 +104,10 @@ SendOrder.hears(SEND_ORDER, async (ctx) => {
     } else {
       await ctx.reply("Buyurtma yetkazishda xatolik: " + error.message);
     }
-    console.log(error);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -133,7 +143,10 @@ SendOrderByID.on(":text", async (ctx) => {
     }
   } catch (error) {
     console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -154,9 +167,12 @@ Catch.on("message", async (ctx) => {
     } else {
       let order = await orderModel.findOne({ order_id: id });
       let msg_id = await ctx.api.sendDocument(
-        "@kitobpdfyuklabotbaza",
+        config.GROUP_ID,
         document.file_id,
-        { caption: `${ctx.message.caption}\n\n\n${BOT_URL}` }
+        {
+          caption: `${ctx.message.caption}\n\n\n${BOT_URL}`,
+          message_thread_id: config.PDF_BOOKS_THREAD_ID,
+        }
       );
       order.status = false;
       order.message_id = msg_id.message_id;
@@ -173,7 +189,10 @@ Catch.on("message", async (ctx) => {
     } else {
       await ctx.reply("Buyurtma yetkazishda xatolik: " + error.message);
     }
-    console.log(error);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -196,8 +215,10 @@ SendOrder.hears(VIEW_ORDER, async (ctx) => {
       );
     }
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -223,8 +244,10 @@ bot.hears(ADMINS, async (ctx) => {
     }
     ctx.session.step = "adminsSetting";
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -233,20 +256,32 @@ SettingAdmin.hears(ADMIN_ADD, async (ctx) => {
   try {
     const buttonRows = [[Keyboard.text(BACK)]];
     const keyboardAdminAdd = Keyboard.from(buttonRows).resized().oneTime(true);
-    ctx.reply(
-      "Admin qo'shish uchun user ning username yoki user_id ni jo'nating❗",
-      {
-        reply_markup: keyboardAdminAdd,
-      }
-    );
-    ctx.session.step = "admin-add";
+    if (ctx.from.id == "5204343498") {
+      ctx.reply(
+        "Admin qo'shish uchun user ning username yoki user_id ni jo'nating❗",
+        {
+          reply_markup: keyboardAdminAdd,
+        }
+      );
+      ctx.session.step = "admin-add";
+    } else {
+      const buttonRows = [[Keyboard.text(BACK)]];
+      const keyboardBack = Keyboard.from(buttonRows).resized().oneTime(true);
+
+      ctx.reply("Sizga reklama jonatishga ruxsat yo'q", {
+        reply_markup: keyboardBack,
+      });
+    }
   } catch (error) {
     if (error.error_code == 403) {
       await ctx.reply("Bot foydalanuvchi tomonidan bloklangan...");
     } else {
       await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
     }
-    console.log(error);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -317,8 +352,10 @@ AdminAdd.on("message", async (ctx) => {
       ctx.session.adminPermission = findUserByUserId.user_id;
     }
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -336,8 +373,10 @@ Permission.on(":text", async (ctx) => {
       reply_markup: keyboard,
     });
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -345,24 +384,35 @@ SettingAdmin.hears(ADMIN_DELETE, async (ctx) => {
   try {
     const buttonRows = [[Keyboard.text(BACK)]];
     const keyboardDel = Keyboard.from(buttonRows).resized().oneTime(true);
-    ctx.reply(
-      "Adminlikni olib tashlamoqchi bo'lgan adminni <b>AdminId</b> sini jo'nating",
-      {
-        reply_markup: keyboardDel,
-        parse_mode: "HTML",
-      }
-    );
-    ctx.session.step = "adminDelete";
+    if (ctx.from.id == "5204343498") {
+      ctx.reply(
+        "Adminlikni olib tashlamoqchi bo'lgan adminni <b>AdminId</b> sini jo'nating",
+        {
+          reply_markup: keyboardDel,
+          parse_mode: "HTML",
+        }
+      );
+      ctx.session.step = "adminDelete";
+    } else {
+      const buttonRows = [[Keyboard.text(BACK)]];
+      const keyboardBack = Keyboard.from(buttonRows).resized().oneTime(true);
+
+      ctx.reply("Sizga reklama jonatishga ruxsat yo'q", {
+        reply_markup: keyboardBack,
+      });
+    }
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
 const adminDelete = router.route("adminDelete");
 adminDelete.on(":text", async (ctx) => {
   try {
-    const generalAdminId = 5634162263;
+    const generalAdminId = 5204343498;
     let yourId = ctx.from.id;
     const adminID = ctx.message.text;
 
@@ -399,8 +449,10 @@ adminDelete.on(":text", async (ctx) => {
       ctx.session.step = "adminMenu";
     }
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -416,8 +468,10 @@ bot.hears(USERS, async (ctx) => {
     });
     ctx.session.step = "userDepartment";
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -442,8 +496,10 @@ userDepartment.hears(COUNT_USERS, async (ctx) => {
       ctx.reply("/count commanddasini ko'rish uchun sizda ruxsat yo'q😔");
     }
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -451,13 +507,23 @@ userDepartment.hears(SEND_ADD, async (ctx) => {
   try {
     const buttonRows = [[Keyboard.text(BACK)]];
     const keyboardDel = Keyboard.from(buttonRows).resized().oneTime(true);
+    if (ctx.from.id == "5204343498") {
+      ctx.reply("Reklama xabarini jo'nating", { reply_markup: keyboardDel });
 
-    ctx.reply("Reklama xabarini jo'nating", { reply_markup: keyboardDel });
+      ctx.session.step = "catch_ad";
+    } else {
+      const buttonRows = [[Keyboard.text(BACK)]];
+      const keyboardBack = Keyboard.from(buttonRows).resized().oneTime(true);
 
-    ctx.session.step = "catch_ad";
+      ctx.reply("Sizga reklama jonatishga ruxsat yo'q", {
+        reply_markup: keyboardBack,
+      });
+    }
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -472,17 +538,24 @@ catchAd.on("message", async (ctx) => {
         const user_id = users[i].user_id;
         await ctx.api.sendMessage(user_id, message);
       } catch (error) {
-        console.log(error.error_code, error.message);
+        ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+          parse_mode: "HTML",
+          message_thread_id: config.BOT_ERROR_THREAD_ID,
+        });
         i++;
       }
     }
     await ctx.reply("Reklama hamma users ga jo'natildi✅✅✅");
   } catch (error) {
-    ctx.reply("Reklama yuborishda xatolik ro'y berdi😔\n\n" + error.message);
+    // ctx.reply("Reklama yuborishda xatolik ro'y berdi😔\n\n" + error.message);
     ctx.session.step = "send_ad";
-    console.log(error);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
+
 bot.hears(BACK, async (ctx) => {
   try {
     const user_id = ctx.from.id;
@@ -505,8 +578,10 @@ bot.hears(BACK, async (ctx) => {
     }
     ctx.session.step = "orders";
   } catch (error) {
-    console.log(error);
-    await ctx.reply("Bot bilan ishlashda xatolik: " + error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 

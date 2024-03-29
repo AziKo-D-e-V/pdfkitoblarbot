@@ -13,8 +13,8 @@ const {
   USERS,
 } = require("../enums/keyboard.vars");
 const orderModel = require("../models/order.model");
+const config = require("../config");
 
-const from_chat_id = "@adsgasdh";
 const buttonRows = [
   [Keyboard.text(SEARCH), Keyboard.text(SEND_ADMIN)],
   [Keyboard.text(INFO)],
@@ -46,6 +46,10 @@ start.on(":text", async (ctx) => {
     }
   } catch (error) {
     console.log(error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -75,13 +79,16 @@ bot.command("start", async (ctx) => {
         username,
         user_id,
       });
+
       ctx.api.sendMessage(
-        from_chat_id,
-        `#new_user\n\n    First Name: <b>${newUser.first_name}</b>\n    Last Name: <b>${newUser.last_name}</b>\n👤Username: <b>${newUser.username}</b>\n🗿User_id: <tg-spoiler>${newUser.user_id}</tg-spoiler>`,
+        config.GROUP_ID,
+        `#new_user\n\n    First Name: <b>${newUser.first_name}</b>\n    Last Name: <b>${newUser.last_name}</b>\n👤Username: <b>${newUser.username ?  "@" + newUser.username : ""}</b>\n🗿User_id: <tg-spoiler>${newUser.user_id}</tg-spoiler>`,
         {
           parse_mode: "HTML",
+          message_thread_id: config.BOT_USERS_THREAD_ID,
         }
       );
+
       ctx.session.step = "start";
     } else if (findUser.is_admin === true) {
       const buttonRows = [
@@ -102,6 +109,10 @@ bot.command("start", async (ctx) => {
   } catch (error) {
     ctx.session.step = "start";
     console.log(error.message);
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
   }
 });
 
@@ -115,6 +126,10 @@ bot.hears(SEARCH, async (ctx) => {
       }
     );
   } catch (error) {
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
     console.log(error.message);
   }
 });
@@ -127,6 +142,10 @@ bot.hears(SEND_ADMIN, async (ctx) => {
 
     ctx.session.step = "order1";
   } catch (error) {
+    ctx.api.sendMessage(config.GROUP_ID, `<code>${error.message}<code>`, {
+      parse_mode: "HTML",
+      message_thread_id: config.BOT_ERROR_THREAD_ID,
+    });
     console.log(error.message);
   }
 });
@@ -158,10 +177,13 @@ order1.on(":text", async (ctx) => {
     user_id,
   });
   ctx.api.sendMessage(
-    from_chat_id,
+    config.GROUP_ID,
     `🆔Order_id: ${order.order_id}\n\nℹ️Buyurtma: ${
       order.order_name
-    }\n🕧Ro'yxatga olingan vaqt: ${order.createdAt.toLocaleString()}`
+    }\n🕧Ro'yxatga olingan vaqt: ${order.createdAt.toLocaleString()}`,
+    {
+      message_thread_id: config.BOT_ORDERS_THREAD_ID,
+    }
   );
 
   ctx.session.step = "start";
